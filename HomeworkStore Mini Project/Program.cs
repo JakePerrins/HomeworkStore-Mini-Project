@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Globalization;
+using System.Xml.Serialization;
+
 namespace HomeworkStore_Mini_Project
 {
     internal class Program
@@ -20,6 +23,138 @@ namespace HomeworkStore_Mini_Project
 
         static void Main(string[] args)
         {
+            /*------------------------------------------------------------------*/
+            /* Variables                                                        */
+            /*------------------------------------------------------------------*/
+
+            string title = ("===================================================\n" +
+                            "Homework \n"                                           +
+                            "===================================================\n");
+
+            string menu = ("1. View Homework\n"     +
+                           "2. Add Homework\n"      +
+                           "3. Complete Homework\n" +
+                           "4. Exit\n"              );
+
+            List<Homework> HomeworkList = new List<Homework>();
+
+            HomeworkList = LoadHomeworks("HomeworkData.bin");
+
+            /*------------------------------------------------------------------*/
+
+            /*------------------------------------------------------------------*/
+            /* Main Program                                                     */
+            /*------------------------------------------------------------------*/
+
+            int menuChoice = 0;
+
+            while (menuChoice != 4)
+            {
+
+                menuChoice = (int)DeclareInput(title + menu, "System.Int32", "Enter a Number");
+
+                menuChoice = RangeCheck(menuChoice, 1, 4);
+
+                switch (menuChoice)
+                {
+                    case 1:
+                        DisplayHomeworks(HomeworkList, true);
+
+                        Console.ReadKey();
+                        break;
+
+                    case 2:
+
+
+                        Homework newHomework = new Homework(); // Creating a new homework to be made by the user
+
+                        newHomework.Subject = (string)DeclareInput("Enter Subject: ", "System.String", "");
+                        ClearLines(1);
+                        newHomework.Description = (string)DeclareInput("Enter Description: ", "System.String", "");
+                        ClearLines(1);
+                        newHomework.DueDate = (DateTime)DeclareInput("Enter Due Date (dd/mm/yyyy): ", "System.DateTime", "Enter as dd/mm/yyyy: ");
+                        
+                        newHomework.Completed = false;
+
+                        ClearLines(1);
+
+                        HomeworkList.Add(newHomework);
+
+                        break;
+
+                    case 3:
+
+                        DisplayHomeworks(HomeworkList, true);
+
+                        int choice = (int)DeclareInput("Which Homework Would You like to mark as completed? ", "System.Int32", "Enter a Number");
+
+                        choice = RangeCheck(menuChoice, 1, FileLength("HomeworkData.bin"));
+
+                        Homework replaceHomework = new Homework();
+
+                        replaceHomework.Subject = HomeworkList[choice - 1].Subject;
+                        replaceHomework.Description = HomeworkList[choice - 1].Description;
+                        replaceHomework.DueDate = HomeworkList[choice - 1].DueDate;
+                        replaceHomework.Completed = true;
+
+                        HomeworkList[choice-1] = replaceHomework;
+
+                        break;
+
+                    case 4: break; /* Exit */
+                }
+
+                SaveHomeworks(HomeworkList, "HomeworkData.bin");
+
+            }
+
+            /*------------------------------------------------------------------*/
+        }
+
+        /* File Interactions */
+
+        static int FileLength(string FileName)
+        {
+            FileStream MyFile = new FileStream(FileName, FileMode.Open);
+
+            BinaryReader MyFileReader = new BinaryReader(MyFile); // Making a binary reader for HomeworkData
+
+            int length = 0;
+
+            while (MyFile.Position < MyFile.Length)
+            {
+                MyFileReader.ReadString();
+                MyFileReader.ReadString();
+                MyFileReader.ReadString();
+                MyFileReader.ReadBoolean();
+
+                length++; // Adds 1 to length for each homework
+            }
+
+            MyFile.Close();
+
+            return length;
+        }
+
+        static void SaveHomeworks(List<Homework> HomeworkList, string FileName)
+        {
+            FileStream MyFile = new FileStream(FileName, FileMode.Truncate);
+
+            BinaryWriter MyFileWrite = new BinaryWriter(MyFile); // Opens a binary reader after deleting contents of the file
+
+            for (int homeworkCount = 0; homeworkCount < HomeworkList.Count; homeworkCount++) // Loops through homework list
+            {
+                Homework homework = HomeworkList[homeworkCount];
+
+                MyFileWrite.Write(homework.Subject);
+                MyFileWrite.Write(homework.Description);
+                MyFileWrite.Write(Convert.ToString(homework.DueDate));
+                MyFileWrite.Write(homework.Completed);
+
+            } // Adds HomeworkList to file
+
+            MyFileWrite.Close();
+            MyFile.Close();
         }
 
         static List<Homework> LoadHomeworks(string FileName)
@@ -30,14 +165,16 @@ namespace HomeworkStore_Mini_Project
 
             try 
             { 
-                MyFile = new FileStream("ProductData.bin", FileMode.Open); 
+                MyFile = new FileStream("HomeworkData.bin", FileMode.Open); 
             }
             catch
             {
-                MyFile = new FileStream("ProductData.bin", FileMode.Create);
+                MyFile = new FileStream("HomeworkData.bin", FileMode.Create);
                 MyFile.Close();
             }
-            // Checking if PoductData exists and if not creating it.
+
+            MyFile.Close();
+            // Checking if HomewrokData exists and if not creating it.
 
             MyFile = new FileStream(FileName, FileMode.Open);
 
@@ -53,7 +190,7 @@ namespace HomeworkStore_Mini_Project
                 homework.Completed = MyFileRead.ReadBoolean();
 
 
-                HomeworkList.Add(homework); // Adds product to list
+                HomeworkList.Add(homework); // Adds homework to list
             }
 
             MyFileRead.Close();
@@ -61,5 +198,105 @@ namespace HomeworkStore_Mini_Project
 
             return HomeworkList;
         }
+
+        static string DisplayHomeworks(List<Homework> HomeworkList, bool Write)
+        {
+            string homeworkString = "";
+
+            for (int homeworkCount = 1; homeworkCount <= HomeworkList.Count; homeworkCount++) // Loops through homework list
+            {
+                Homework homework = HomeworkList[homeworkCount - 1];
+
+                string homeworkFormat = String.Format(($"{1}. {homework.Subject}: " +
+                                                       $"{(homework.Completed ? "" : "Not")} Completed: " +
+                                                       $"{Convert.ToString(homework.DueDate.Date)}\n" +
+
+                                                       $"{homework.Description}\n"), homework, homeworkCount);
+
+            homeworkString += homeworkFormat; // Adds to string
+
+                if (Write)
+                {
+                    Console.WriteLine(homeworkFormat); // If write, write
+                }
+            }
+
+            return homeworkString;
+        }
+
+        /*-------------------------------------------------------------------------------*/
+
+        /* Improvements to interface */
+
+        static void ClearLines(int numLines) // Method for clearing a certain number of lines.
+        {
+            for (int linesCleared = 0; linesCleared < numLines; linesCleared++) // Looping for number of lines specified.
+            {
+                Console.SetCursorPosition(0, Console.CursorTop);                                                          // Deletes a single line.
+                Console.SetCursorPosition(0, Console.CursorTop - (Console.WindowWidth >= Console.BufferWidth ? 1 : 0));
+                Console.Write(new string(' ', Console.WindowWidth));
+                Console.SetCursorPosition(0, Console.CursorTop - (Console.WindowWidth >= Console.BufferWidth ? 1 : 0));
+            }
+        }
+
+        /*-------------------------------------------------------------------------------*/
+
+        /* Validation */
+
+        static int RangeCheck(int num, int Min, int Max)
+        {
+            bool valid = true;
+
+            do // Loops until valid
+            {
+                valid = true;
+                if (num < Min || num > Max) // If not within range (inclusive)
+                {
+                    ClearLines(1);
+                    Console.Write("Enter a valid number:  ");
+                    num = (int)Validate(Console.ReadLine(), "System.Int32", "Enter a number: "); // Asks for a new input
+                    valid = false;
+                }
+
+            } while (valid == false);
+
+            return num;
+        }
+
+        static object Validate(object input, string targetType, string errorMessage) // Validation for a variable of any type. Parameter are input of any type, target type and error message.
+        {
+            Type type = Type.GetType(targetType); // Gets the target type from the given string.
+
+            bool valid = false; // Assumes false.
+
+            while (valid == false) // Loop while false.
+            {
+                try // tries to convert the input to the target type.
+                {
+                    input = Convert.ChangeType(input, type);
+                    valid = true; // Ends loop if possible.
+                }
+                catch // Asks for a new input if not possible.
+                {
+                    ClearLines(1);
+                    Console.Write(errorMessage);
+                    input = Console.ReadLine();
+                }
+            }
+            return input; // Returns input.
+        }
+
+        static object DeclareInput(string prompt, string targetType, string errorMessage) // Method for declaring an input on one line.
+        {
+            Type type = Type.GetType(targetType); // Gets target type to pass to validate.
+
+            Console.Write(prompt); // Asks using prompt.
+
+            object variable = Convert.ChangeType(Validate(Console.ReadLine(), targetType, errorMessage), type); // Validates and then changes user input to the correct type after.
+
+            return variable; // Returning.
+        }
+
+        /*-------------------------------------------------------------------------------*/
     }
 }
