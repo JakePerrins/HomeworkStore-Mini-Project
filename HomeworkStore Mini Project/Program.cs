@@ -34,7 +34,7 @@ namespace HomeworkStore_Mini_Project
             string menu = ("1. View Homework\n"     +
                            "2. Add Homework\n"      +
                            "3. Complete Homework\n" +
-                           "4. Exit\n"              );
+                           "4. Exit\n\n"              );
 
             List<Homework> HomeworkList = new List<Homework>();
 
@@ -51,19 +51,20 @@ namespace HomeworkStore_Mini_Project
             while (menuChoice != 4)
             {
 
-                menuChoice = (int)DeclareInput(title + menu, "System.Int32", "Enter a Number");
+                Console.Clear();
+                menuChoice = (int)DeclareInput(title + menu, "System.Int32", "Enter a Number: ");
 
                 menuChoice = RangeCheck(menuChoice, 1, 4);
 
                 switch (menuChoice)
                 {
-                    case 1:
+                    case 1: ClearLines(6);
                         DisplayHomeworks(HomeworkList, true);
 
                         Console.ReadKey();
                         break;
 
-                    case 2:
+                    case 2: ClearLines(6);
 
 
                         Homework newHomework = new Homework(); // Creating a new homework to be made by the user
@@ -72,23 +73,39 @@ namespace HomeworkStore_Mini_Project
                         ClearLines(1);
                         newHomework.Description = (string)DeclareInput("Enter Description: ", "System.String", "");
                         ClearLines(1);
+
                         newHomework.DueDate = (DateTime)DeclareInput("Enter Due Date (dd/mm/yyyy): ", "System.DateTime", "Enter as dd/mm/yyyy: ");
+
+                        while (newHomework.DueDate.CompareTo(DateTime.Today) < 0)
+                        {
+                            ClearLines(1);
+                            newHomework.DueDate = (DateTime)DeclareInput("Enter Due Date in the Future (dd/mm/yyyy): ", "System.DateTime", "Enter as dd/mm/yyyy: ");
+                        }
                         
                         newHomework.Completed = false;
 
                         ClearLines(1);
 
-                        HomeworkList.Add(newHomework);
+                        if (newHomework.DueDate.CompareTo(DateTime.Today) < 0) { HomeworkList = HomeworkList.Append(newHomework).ToList(); }
+
+                        else { HomeworkList = HomeworkList.Prepend(newHomework).ToList(); }
 
                         break;
 
-                    case 3:
+                    case 3: ClearLines(6);
+
+                        if (HomeworkList.Count == 0)
+                        {
+                            Console.Write("There are no homeworks stored. Press any key to continue: ");
+                            Console.ReadKey();
+                            break;
+                        }
 
                         DisplayHomeworks(HomeworkList, true);
 
                         int choice = (int)DeclareInput("Which Homework Would You like to mark as completed? ", "System.Int32", "Enter a Number");
 
-                        choice = RangeCheck(menuChoice, 1, FileLength("HomeworkData.bin"));
+                        choice = RangeCheck(choice, 1, HomeworkList.Count);
 
                         Homework replaceHomework = new Homework();
 
@@ -99,42 +116,21 @@ namespace HomeworkStore_Mini_Project
 
                         HomeworkList[choice-1] = replaceHomework;
 
+                        Console.ReadKey();
+
                         break;
 
                     case 4: break; /* Exit */
                 }
 
-                SaveHomeworks(HomeworkList, "HomeworkData.bin");
-
             }
+
+            SaveHomeworks(HomeworkList, "HomeworkData.bin");
 
             /*------------------------------------------------------------------*/
         }
 
         /* File Interactions */
-
-        static int FileLength(string FileName)
-        {
-            FileStream MyFile = new FileStream(FileName, FileMode.Open);
-
-            BinaryReader MyFileReader = new BinaryReader(MyFile); // Making a binary reader for HomeworkData
-
-            int length = 0;
-
-            while (MyFile.Position < MyFile.Length)
-            {
-                MyFileReader.ReadString();
-                MyFileReader.ReadString();
-                MyFileReader.ReadString();
-                MyFileReader.ReadBoolean();
-
-                length++; // Adds 1 to length for each homework
-            }
-
-            MyFile.Close();
-
-            return length;
-        }
 
         static void SaveHomeworks(List<Homework> HomeworkList, string FileName)
         {
@@ -189,8 +185,9 @@ namespace HomeworkStore_Mini_Project
                 homework.DueDate = Convert.ToDateTime(MyFileRead.ReadString());
                 homework.Completed = MyFileRead.ReadBoolean();
 
+                if (homework.DueDate.CompareTo(DateTime.Today) < 0) { HomeworkList = HomeworkList.Append(homework).ToList(); }
 
-                HomeworkList.Add(homework); // Adds homework to list
+                else { HomeworkList = HomeworkList.Prepend(homework).ToList(); }
             }
 
             MyFileRead.Close();
@@ -207,17 +204,27 @@ namespace HomeworkStore_Mini_Project
             {
                 Homework homework = HomeworkList[homeworkCount - 1];
 
-                string homeworkFormat = String.Format(($"{1}. {homework.Subject}: " +
-                                                       $"{(homework.Completed ? "" : "Not")} Completed: " +
-                                                       $"{Convert.ToString(homework.DueDate.Date)}\n" +
-
-                                                       $"{homework.Description}\n"), homework, homeworkCount);
-
-            homeworkString += homeworkFormat; // Adds to string
-
-                if (Write)
+                if (homework.DueDate.CompareTo(DateTime.Today) >= 0)
                 {
-                    Console.WriteLine(homeworkFormat); // If write, write
+
+                    Console.ForegroundColor = homework.DueDate.CompareTo(DateTime.Today.AddDays(3)) < 0 ? ConsoleColor.Red : Console.ForegroundColor;
+
+                    Console.ForegroundColor = homework.Completed ? ConsoleColor.Green : Console.ForegroundColor;
+
+                    string homeworkFormat = String.Format(($"{homeworkCount}. {homework.Subject}: " +
+                                                           $"{(homework.Completed ? "" : "Not")} Completed: " +
+                                                           $"{homework.DueDate.ToString("dd/MM/yyyy")}\n" +
+
+                                                           $"{homework.Description}\n"), homework, homeworkCount);
+
+                    homeworkString += homeworkFormat; // Adds to string
+
+                    if (Write)
+                    {
+                        Console.WriteLine(homeworkFormat); // If write, write
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.White;
                 }
             }
 
