@@ -34,7 +34,7 @@ namespace HomeworkStore_Mini_Project
             string menu = ("1. View Homework\n" +
                            "2. Add Homework\n" +
                            "3. Complete Homework\n" +
-                           "4. Exit\n\n");
+                           "4. Exit\n\n"              );
 
             List<Homework> HomeworkList = new List<Homework>();
 
@@ -58,15 +58,13 @@ namespace HomeworkStore_Mini_Project
 
                 switch (menuChoice)
                 {
-                    case 1:
-                        ClearLines(6);
+                    case 1: ClearLines(6);
                         DisplayHomeworks(HomeworkList, true);
 
                         Console.ReadKey();
                         break;
 
-                    case 2:
-                        ClearLines(6);
+                    case 2: ClearLines(6);
 
 
                         Homework newHomework = new Homework(); // Creating a new homework to be made by the user
@@ -83,7 +81,7 @@ namespace HomeworkStore_Mini_Project
                             ClearLines(1);
                             newHomework.DueDate = (DateTime)DeclareInput("Enter Due Date in the Future (dd/mm/yyyy): ", "System.DateTime", "Enter as dd/mm/yyyy: ");
                         }
-
+                        
                         newHomework.Completed = false;
 
                         ClearLines(1);
@@ -92,10 +90,11 @@ namespace HomeworkStore_Mini_Project
 
                         else { HomeworkList = HomeworkList.Prepend(newHomework).ToList(); }
 
+                        else { HomeworkList = HomeworkList.Prepend(newHomework).ToList(); }
+
                         break;
 
-                    case 3:
-                        ClearLines(6);
+                    case 3: ClearLines(6);
 
                         if (HomeworkList.Count == 0)
                         {
@@ -118,6 +117,8 @@ namespace HomeworkStore_Mini_Project
                         replaceHomework.Completed = true;
 
                         HomeworkList[choice - 1] = replaceHomework;
+
+                        Console.ReadKey();
 
                         Console.ReadKey();
 
