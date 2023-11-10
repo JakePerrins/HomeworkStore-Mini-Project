@@ -34,11 +34,11 @@ namespace HomeworkStore_Mini_Project
             string menu = ("1. View Homework\n" +
                            "2. Add Homework\n" +
                            "3. Complete Homework\n" +
-                           "4. Exit\n\n"              );
+                           "4. Exit\n\n");
 
             List<Homework> HomeworkList = new List<Homework>();
 
-            HomeworkList = LoadHomeworks("HomeworkData.bin");
+            HomeworkList = LoadHomeworks("HomeworkData.bin"); // Loads homework to HomeworkList
 
             /*------------------------------------------------------------------*/
 
@@ -48,7 +48,7 @@ namespace HomeworkStore_Mini_Project
 
             int menuChoice = 0;
 
-            while (menuChoice != 4)
+            while (menuChoice != 4) // Loop while not exit
             {
 
                 Console.Clear();
@@ -58,13 +58,15 @@ namespace HomeworkStore_Mini_Project
 
                 switch (menuChoice)
                 {
-                    case 1: ClearLines(6);
-                        DisplayHomeworks(HomeworkList, true);
+                    case 1:
+                        ClearLines(6);
+                        DisplayHomeworks(HomeworkList, true); // Displays
 
                         Console.ReadKey();
                         break;
 
-                    case 2: ClearLines(6);
+                    case 2:
+                        ClearLines(6);
 
 
                         Homework newHomework = new Homework(); // Creating a new homework to be made by the user
@@ -76,27 +78,28 @@ namespace HomeworkStore_Mini_Project
 
                         newHomework.DueDate = (DateTime)DeclareInput("Enter Due Date (dd/mm/yyyy): ", "System.DateTime", "Enter as dd/mm/yyyy: ");
 
-                        while (newHomework.DueDate.CompareTo(DateTime.Today) < 0)
+                        while (newHomework.DueDate.CompareTo(DateTime.Today) < 0) // Looping until a date in the future is entered
                         {
                             ClearLines(1);
                             newHomework.DueDate = (DateTime)DeclareInput("Enter Due Date in the Future (dd/mm/yyyy): ", "System.DateTime", "Enter as dd/mm/yyyy: ");
                         }
-                        
-                        newHomework.Completed = false;
+
+                        newHomework.Completed = false; 
 
                         ClearLines(1);
 
-                        if (newHomework.DueDate.CompareTo(DateTime.Today) < 0) { HomeworkList = HomeworkList.Append(newHomework).ToList(); }
+                        if (newHomework.DueDate.CompareTo(DateTime.Today) < 0) { HomeworkList = HomeworkList.Append(newHomework).ToList(); } // If in the past adds to the end of the list
 
-                        else { HomeworkList = HomeworkList.Prepend(newHomework).ToList(); }
+                        else { HomeworkList = HomeworkList.Prepend(newHomework).ToList(); } // Adds dates in the future to the start of the list
 
-                        else { HomeworkList = HomeworkList.Prepend(newHomework).ToList(); }
+                        // Useful for debugging while entering dates in the past
 
                         break;
 
-                    case 3: ClearLines(6);
+                    case 3:
+                        ClearLines(6);
 
-                        if (HomeworkList.Count == 0)
+                        if (HomeworkList.Count == 0) // Error message if there are no homeworks
                         {
                             Console.Write("There are no homeworks stored. Press any key to continue: ");
                             Console.ReadKey();
@@ -116,9 +119,7 @@ namespace HomeworkStore_Mini_Project
                         replaceHomework.DueDate = HomeworkList[choice - 1].DueDate;
                         replaceHomework.Completed = true;
 
-                        HomeworkList[choice - 1] = replaceHomework;
-
-                        Console.ReadKey();
+                        HomeworkList[choice - 1] = replaceHomework; // Replacing the homework in the list with its completed copy
 
                         Console.ReadKey();
 
@@ -129,7 +130,7 @@ namespace HomeworkStore_Mini_Project
 
             }
 
-            SaveHomeworks(HomeworkList, "HomeworkData.bin");
+            SaveHomeworks(HomeworkList, "HomeworkData.bin"); // Saving list to file after exit
 
             /*------------------------------------------------------------------*/
         }
@@ -159,7 +160,7 @@ namespace HomeworkStore_Mini_Project
 
         static List<Homework> LoadHomeworks(string FileName)
         {
-            List<Homework> HomeworkList = new List<Homework>();
+            List<Homework> HomeworkList = new List<Homework>(); // Creates an empty homework list to add homeworks to
 
             FileStream MyFile;
 
@@ -173,10 +174,11 @@ namespace HomeworkStore_Mini_Project
                 MyFile.Close();
             }
 
-            MyFile.Close();
             // Checking if HomewrokData exists and if not creating it.
 
-            MyFile = new FileStream(FileName, FileMode.Open);
+            MyFile.Close();
+
+            MyFile = new FileStream(FileName, FileMode.Open); 
 
             BinaryReader MyFileRead = new BinaryReader(MyFile); // Opening a Binary Reader
 
@@ -189,9 +191,11 @@ namespace HomeworkStore_Mini_Project
                 homework.DueDate = Convert.ToDateTime(MyFileRead.ReadString());
                 homework.Completed = MyFileRead.ReadBoolean();
 
-                if (homework.DueDate.CompareTo(DateTime.Today) < 0) { HomeworkList = HomeworkList.Append(homework).ToList(); }
+                if (homework.DueDate.CompareTo(DateTime.Today) < 0) { HomeworkList = HomeworkList.Append(homework).ToList(); } // Adding dates in the past to the end of the list
 
-                else { HomeworkList = HomeworkList.Prepend(homework).ToList(); }
+                else { HomeworkList = HomeworkList.Prepend(homework).ToList(); } // Adding dates in the future to the start of the list
+
+                // Prevents past dates from interfering with the list index
             }
 
             MyFileRead.Close();
@@ -208,12 +212,12 @@ namespace HomeworkStore_Mini_Project
             {
                 Homework homework = HomeworkList[homeworkCount - 1];
 
-                if (homework.DueDate.CompareTo(DateTime.Today) >= 0)
+                if (homework.DueDate.CompareTo(DateTime.Today) >= 0) // Only displays if in the future
                 {
 
-                    Console.ForegroundColor = homework.DueDate.CompareTo(DateTime.Today.AddDays(3)) < 0 ? ConsoleColor.Red : Console.ForegroundColor;
+                    Console.ForegroundColor = homework.DueDate.CompareTo(DateTime.Today.AddDays(3)) < 0 ? ConsoleColor.Red : Console.ForegroundColor; // Red if within 3 days
 
-                    Console.ForegroundColor = homework.Completed ? ConsoleColor.Green : Console.ForegroundColor;
+                    Console.ForegroundColor = homework.Completed ? ConsoleColor.Green : Console.ForegroundColor; // Green if completed
 
                     string homeworkFormat = String.Format(($"{homeworkCount}. {homework.Subject}: " +
                                                            $"{(homework.Completed ? "" : "Not")} Completed: " +
@@ -228,7 +232,7 @@ namespace HomeworkStore_Mini_Project
                         Console.WriteLine(homeworkFormat); // If write, write
                     }
 
-                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.ForegroundColor = ConsoleColor.White; // Resets colour
                 }
             }
 
